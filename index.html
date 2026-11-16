@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Màn hình nhắc chữ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700&family=Inter:wght@400;700&family=Noto+Serif:wght@400;700&family=Roboto:wght@400;700&display=swap">
+  <link rel="stylesheet" href="css/editor-screen.css">
+  <link rel="stylesheet" href="css/prompter-screen.css">
+</head>
+<body>
+  <section id="editor-screen">
+    <header class="app-header">
+      <h1>Màn hình nhắc chữ</h1>
+      <div class="header-actions">
+        <button type="button" id="btn-restart" class="btn" title="Lần chạy tới bắt đầu từ dòng đầu tiên">↺ Đọc lại từ đầu</button>
+        <button type="button" id="btn-run" class="btn btn-primary">▶ Chạy toàn màn hình</button>
+      </div>
+    </header>
+
+    <main class="editor-layout">
+      <div class="script-pane">
+        <label for="script-input" class="pane-title">Kịch bản</label>
+        <textarea id="script-input" spellcheck="false"
+          placeholder="Dán kịch bản vào đây (text thuần, tiếng Việt hoặc tiếng Anh). Mỗi dòng là một đoạn."></textarea>
+        <div id="script-stats" class="script-stats"></div>
+      </div>
+
+      <aside class="settings-pane">
+        <div class="preview-wrap">
+          <div id="preview-box"><div id="preview-stage" class="prompter-stage"></div></div>
+          <p class="hint">Xem trước tỉ lệ màn hình thật. Khung đứt nét là ô trống cho điện thoại, dải màu là vạch đọc.</p>
+        </div>
+
+        <fieldset>
+          <legend>Chữ</legend>
+          <label>Font
+            <select data-setting="fontFamily">
+              <option value="'Be Vietnam Pro', sans-serif">Be Vietnam Pro</option>
+              <option value="'Inter', sans-serif">Inter</option>
+              <option value="'Roboto', sans-serif">Roboto</option>
+              <option value="'Noto Serif', serif">Noto Serif</option>
+              <option value="system-ui, 'Segoe UI', Arial, sans-serif">Font hệ thống</option>
+            </select>
+          </label>
+          <label>Cỡ chữ <input type="range" data-setting="fontSize" min="24" max="200" step="2" data-unit="px"><output></output></label>
+          <label>Giãn dòng <input type="range" data-setting="lineHeight" min="1" max="2" step="0.05"><output></output></label>
+          <label class="check"><input type="checkbox" data-setting="boldAll"> In đậm toàn bộ</label>
+          <label class="check"><input type="checkbox" data-setting="paragraphSpacing"> Thêm dòng trống giữa các đoạn</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Màu</legend>
+          <div id="color-presets" class="presets"></div>
+          <div class="color-row">
+            <label>Chữ <input type="color" data-setting="textColor"></label>
+            <label>Nền <input type="color" data-setting="bgColor"></label>
+            <label>Vạch đọc <input type="color" data-setting="readingLineColor"></label>
+          </div>
+          <label>Độ sáng chữ đã đọc <input type="range" data-setting="readOpacity" min="0.1" max="1" step="0.05"><output></output></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Bố cục</legend>
+          <label>Lề <input type="range" data-setting="margin" min="0" max="80" step="2" data-unit="px"><output></output></label>
+          <label>Độ rộng cột chữ <input type="range" data-setting="columnWidthPct" min="40" max="100" step="5" data-unit="%"><output></output></label>
+          <label>Khoảng cách chữ tới ô trống <input type="range" data-setting="holeGap" min="0" max="60" step="2" data-unit="px"><output></output></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Ô trống (điện thoại che)</legend>
+          <label>Tâm ngang <input type="range" data-setting="hole.cx" min="0" max="100" step="0.5" data-unit="%"><output></output></label>
+          <label>Tâm dọc <input type="range" data-setting="hole.cy" min="0" max="100" step="0.5" data-unit="%"><output></output></label>
+          <label>Rộng <input type="range" data-setting="hole.w" min="5" max="60" step="0.5" data-unit="%"><output></output></label>
+          <label>Cao <input type="range" data-setting="hole.h" min="5" max="60" step="0.5" data-unit="%"><output></output></label>
+          <p class="hint">Chỉnh chính xác: khi đang chạy, đặt điện thoại lên rồi bấm <kbd>H</kbd> để kéo ô trống cho khớp.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Điều khiển</legend>
+          <label>Mỗi lần bấm ↑/↓
+            <select data-setting="stepLines" data-number>
+              <option value="1">1 dòng</option>
+              <option value="2">2 dòng</option>
+              <option value="3">3 dòng</option>
+            </select>
+          </label>
+          <label class="check"><input type="checkbox" data-setting="smoothScroll"> Hiệu ứng trượt mượt</label>
+          <ul class="keys">
+            <li><kbd>↓</kbd> / <kbd>Space</kbd> tiến, <kbd>↑</kbd> lùi</li>
+            <li><kbd>PgDn</kbd> / <kbd>PgUp</kbd> nửa màn hình</li>
+            <li><kbd>Home</kbd> / <kbd>End</kbd> đầu / cuối</li>
+            <li><kbd>+</kbd> / <kbd>−</kbd> cỡ chữ, <kbd>H</kbd> chỉnh ô trống, <kbd>Esc</kbd> thoát</li>
+          </ul>
+        </fieldset>
+
+        <div class="actions">
+          <button type="button" id="btn-reset-settings" class="btn">Đặt lại mặc định</button>
+          <button type="button" id="btn-clear-script" class="btn btn-danger">Xoá kịch bản</button>
+        </div>
+      </aside>
+    </main>
+  </section>
+
+  <section id="prompter-screen" hidden>
+    <div id="prompter-stage" class="prompter-stage"></div>
+    <div id="progress-bar"></div>
+    <div id="calibrator" hidden>
+      <div class="calib-box"><div class="calib-handle" title="Kéo để đổi kích thước"></div></div>
+      <div class="calib-panel">
+        <p>Kéo ô cho khớp phần điện thoại che · kéo góc để đổi cỡ<br>
+          <kbd>←↑↓→</kbd> dịch (Shift: nhanh) · <kbd>Ctrl</kbd>+mũi tên đổi cỡ</p>
+        <button type="button" class="btn btn-primary" data-calib="save">Lưu (Enter)</button>
+        <button type="button" class="btn" data-calib="cancel">Huỷ (X)</button>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="js/app-main.js"></script>
+</body>
+</html>

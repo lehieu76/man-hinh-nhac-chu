@@ -1,0 +1,104 @@
+/* Màn hình chạy + khung xem trước (dùng chung .prompter-stage) */
+.prompter-stage {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg, #000);
+  color: var(--fg, #fff);
+  font-family: var(--font, sans-serif);
+  font-size: var(--size, 64px);
+  font-weight: var(--weight, 400);
+}
+
+.prompter-stage .text-layer {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.prompter-stage .line {
+  position: absolute;
+  line-height: var(--row-h);
+  white-space: pre;
+}
+
+.prompter-stage .line.read {
+  opacity: var(--read-opacity, 0.6);
+}
+
+/* Vạch đọc: dải nền mờ + thanh đậm ở mép trái */
+.prompter-stage .reading-band {
+  position: absolute;
+  background: color-mix(in srgb, var(--reading-color) 14%, transparent);
+  border-left: 6px solid var(--reading-color);
+}
+
+.prompter-stage .hole-outline {
+  position: absolute;
+  border: 3px dashed color-mix(in srgb, var(--fg) 60%, transparent);
+  border-radius: 12px;
+}
+
+#prompter-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: var(--bg, #000);
+  cursor: none;
+}
+
+#prompter-screen.calibrating {
+  cursor: default;
+}
+
+#progress-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 0;
+  background: var(--reading-color, #fc0);
+  opacity: 0.7;
+}
+
+/* Hiệu chỉnh ô trống */
+#calibrator {
+  position: absolute;
+  inset: 0;
+}
+
+.calib-box {
+  position: absolute;
+  border: 3px solid #ff3b5c;
+  background: rgba(255, 59, 92, 0.25);
+  border-radius: 12px;
+  cursor: move;
+  touch-action: none;
+}
+
+.calib-handle {
+  position: absolute;
+  right: -12px;
+  bottom: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ff3b5c;
+  cursor: nwse-resize;
+}
+
+.calib-panel {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: rgba(20, 20, 20, 0.92);
+  color: #eee;
+  font: 15px/1.5 system-ui, sans-serif;
+  text-align: center;
+}
+
+.calib-panel p {
+  margin: 0 0 10px;
+}

@@ -1,0 +1,11 @@
+{
+  "name": "man-hinh-nhac-chu",
+  "version": "1.0.0",
+  "description": "Web nhắc chữ (teleprompter) cho quay video nhìn thẳng camera điện thoại",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\"",
+    "start": "python3 -m http.server 8000"
+  }
+}
