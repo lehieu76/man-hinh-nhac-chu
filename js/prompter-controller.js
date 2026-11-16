@@ -124,7 +124,8 @@ export function createPrompterController({ screenEl, onExit }) {
 
   function onResize() {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => running && relayout(layout.tokenAt(k)), 100);
+    // layout còn null khi đang chờ font lần đầu: start() sẽ tự dựng khung sau đó
+    resizeTimer = setTimeout(() => running && layout && relayout(layout.tokenAt(k)), 100);
   }
 
   // Phải được gọi trực tiếp trong handler click (trình duyệt chỉ cho fullscreen khi có thao tác người dùng)
@@ -155,6 +156,7 @@ export function createPrompterController({ screenEl, onExit }) {
     wakeLock = null;
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     screenEl.hidden = true;
+    layout = null;
     saveNow();
     onExit();
   }

@@ -1,9 +1,19 @@
 // Hình học màn hình chạy: chia hàng, tính cột chữ, ô trống (px) và các khe đặt chữ của từng hàng.
-// Hàng giao với ô trống bị cắt thành tối đa 2 khe (trái / phải); hàng đọc là hàng đầu tiên nằm
-// hoàn toàn dưới ô trống, để dòng đang đọc luôn sát camera.
+// Hàng giao với ô trống bị cắt thành tối đa 2 khe (trái / phải). Hàng đọc là hàng đầy đủ sát ô trống
+// nhất (ngay trên hoặc ngay dưới ô), để dòng đang đọc luôn gần camera.
+
+// readingPosition: 'above' (mặc định — camera ở mép trên điện thoại nên đọc ngay trên ô trống) hoặc
+// 'below' (ngay dưới ô). Phía ưu tiên không còn chỗ cho một hàng đầy đủ thì dùng phía còn lại.
+function pickReadingRow(rowSlots, aboveRow, belowRow, readingPosition) {
+  const order = readingPosition === 'below' ? [belowRow, aboveRow] : [aboveRow, belowRow];
+  const row = order.find((r) => r >= 0);
+  if (row !== undefined) return row;
+  return Math.max(0, rowSlots.findIndex((s) => s.length && s[0].full));
+}
 
 export function computeGeometry({
-  width, height, margin, fontSize, lineHeight, columnWidthPct, hole, holeGap, minSlotFactor = 4,
+  width, height, margin, fontSize, lineHeight, columnWidthPct, hole, holeGap,
+  readingPosition = 'above', minSlotFactor = 4,
 }) {
   const rowH = Math.round(fontSize * lineHeight);
   const rows = Math.max(1, Math.floor((height - 2 * margin) / rowH));
@@ -23,7 +33,8 @@ export function computeGeometry({
   const minSlot = fontSize * minSlotFactor;
 
   const rowSlots = [];
-  let readingRow = -1;
+  let aboveRow = -1; // hàng đầy đủ cuối cùng nằm trên ô trống
+  let belowRow = -1; // hàng đầy đủ đầu tiên nằm dưới ô trống
   for (let r = 0; r < rows; r++) {
     const top = margin + r * rowH;
     const bottom = top + rowH;
@@ -31,7 +42,8 @@ export function computeGeometry({
       && holeRect.right + holeGap > colLeft && holeRect.left - holeGap < colRight;
     if (!hit) {
       rowSlots.push([{ left: colLeft, width: colW, full: true }]);
-      if (readingRow < 0 && top >= holeRect.bottom) readingRow = r;
+      if (bottom <= holeRect.top) aboveRow = r;
+      if (belowRow < 0 && top >= holeRect.bottom) belowRow = r;
       continue;
     }
     const slots = [];
@@ -42,8 +54,7 @@ export function computeGeometry({
     if (rightW >= minSlot) slots.push({ left: rightLeft, width: rightW, full: false });
     rowSlots.push(slots);
   }
-  // Ô trống chạm đáy màn hình (không còn hàng nào bên dưới): đọc ở hàng trống đầu tiên
-  if (readingRow < 0) readingRow = Math.max(0, rowSlots.findIndex((s) => s.length && s[0].full));
+  const readingRow = pickReadingRow(rowSlots, aboveRow, belowRow, readingPosition);
 
   return { width, height, margin, rowH, rows, colLeft, colW, holeRect, rowSlots, readingRow };
 }

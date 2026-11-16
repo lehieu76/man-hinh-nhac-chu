@@ -126,6 +126,69 @@ test('khe quá hẹp cạnh ô trống bị bỏ', () => {
   hitRows.forEach((slots) => assert.equal(slots.length, 0));
 });
 
+// Lỗi thực tế 16/11: kéo ô trống xuống thấp + đổi cỡ chữ → chữ đè ô trống, vạch đọc xuống dòng cuối
+const HOLES = {
+  'trên giữa': { cx: 50, cy: 11, w: 18, h: 22 },
+  'giữa màn hình': { cx: 50, cy: 45, w: 20, h: 30 },
+  'dưới giữa (điện thoại trên chân đế)': { cx: 50, cy: 75, w: 20, h: 40 },
+  'chạm đáy': { cx: 50, cy: 85, w: 25, h: 30 },
+  'lệch trái': { cx: 20, cy: 60, w: 15, h: 35 },
+};
+
+function overlaps(geo, it) {
+  const h = geo.holeRect;
+  const top = rowTop(geo, it.row);
+  return it.left < h.right && it.left + measure(it.text) > h.left && top < h.bottom && top + geo.rowH > h.top;
+}
+
+test('quét mọi cỡ chữ × vị trí ô trống × vị trí vạch đọc: không chữ nào đè ô trống', () => {
+  const tokens = tokenize(sampleScript(10));
+  for (const [name, hole] of Object.entries(HOLES)) {
+    for (let fontSize = 24; fontSize <= 200; fontSize += 8) {
+      for (const readingPosition of ['above', 'below']) {
+        for (const spacing of [false, true]) {
+          const geo = computeGeometry({ ...BASE, fontSize, hole, readingPosition });
+          const lines = wrapLines(tokens, geo.colW, measure, SPACE, spacing);
+          const readingFull = geo.rowSlots[geo.readingRow][0]?.full;
+          for (let k = 0; k < lines.length; k += 3) {
+            const frame = buildFrame({ tokens, lines, k, geo, measure, spaceW: SPACE, paragraphSpacing: spacing });
+            const bad = frame.find((it) => overlaps(geo, it));
+            assert.ok(!bad, `${name} size=${fontSize} ${readingPosition} k=${k}: "${bad?.text}" đè ô trống`);
+            if (readingFull && lines[k].text) {
+              assert.equal(frame.find((it) => it.kind === 'current')?.text, lines[k].text);
+            }
+          }
+        }
+      }
+    }
+  }
+});
+
+test('vạch đọc sát camera: ô ở dưới → ngay trên ô; ô chạm đỉnh → ngay dưới ô', () => {
+  const low = computeGeometry({ ...BASE, hole: HOLES['dưới giữa (điện thoại trên chân đế)'] });
+  assert.ok(rowTop(low, low.readingRow) + low.rowH <= low.holeRect.top);
+  assert.ok(rowTop(low, low.readingRow + 1) + low.rowH > low.holeRect.top, 'phải là hàng sát ô nhất');
+  const top = computeGeometry({ ...BASE, hole: HOLES['trên giữa'] });
+  assert.ok(rowTop(top, top.readingRow) >= top.holeRect.bottom);
+  const below = computeGeometry({ ...BASE, hole: HOLES['giữa màn hình'], readingPosition: 'below' });
+  assert.ok(rowTop(below, below.readingRow) >= below.holeRect.bottom);
+});
+
+test('chữ từ hàng đọc trở xuống nối liền đúng thứ tự khi phải chạy vòng ô trống bên dưới', () => {
+  const geo = computeGeometry({ ...BASE, hole: HOLES['dưới giữa (điện thoại trên chân đế)'] });
+  const tokens = tokenize(sampleScript());
+  const lines = wrapLines(tokens, geo.colW, measure, SPACE);
+  for (const k of [0, 9, 30]) {
+    const shown = buildFrame({ tokens, lines, k, geo, measure, spaceW: SPACE })
+      .filter((it) => it.kind !== 'read')
+      .sort((a, b) => a.row - b.row || a.left - b.left)
+      .flatMap((it) => it.text.split(' '));
+    const after = tokens.slice(lines[k].start).filter((t) => t !== PARA);
+    assert.deepEqual(shown, after.slice(0, shown.length));
+    assert.ok(shown.length > lines[k].text.split(' ').length, 'phải có chữ cạnh ô trống bên dưới');
+  }
+});
+
 test('hiệu năng: dàn 3.000 từ + dựng khung dưới 50ms', () => {
   const geo = computeGeometry(BASE);
   const tokens = tokenize(Array.from({ length: 3000 }, (_, i) => `từ${i}`).join(' '));

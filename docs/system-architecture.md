@@ -24,14 +24,17 @@ Khung xem trước ở màn soạn dùng chính `prompter-layout` + `prompter-re
 - Màn hình chia thành `rows` hàng, mỗi hàng cao `rowH = fontSize × lineHeight`, bắt đầu từ lề trên.
 - Ô trống (điện thoại) lưu theo % màn hình: tâm `cx, cy`, kích thước `w, h`.
 - Mỗi hàng có danh sách **khe** (slot). Hàng không giao ô trống: 1 khe bằng cả cột chữ (`full: true`). Hàng giao ô trống (mở rộng thêm `holeGap`): tối đa 2 khe trái / phải. Khe hẹp hơn `4 × fontSize` bị bỏ.
-- **Hàng đọc** (`readingRow`): hàng đầu tiên không giao ô trống và nằm hoàn toàn dưới đáy ô.
+- **Hàng đọc** (`readingRow`): hàng đầy đủ sát ô trống nhất. Mặc định (`readingPosition: 'above'`) là hàng ngay **trên** ô, vì camera ở mép trên điện thoại; `'below'` là hàng ngay dưới ô. Phía ưu tiên không còn chỗ cho một hàng đầy đủ thì dùng phía còn lại.
 - Cột chữ thu hẹp được căn giữa theo tâm ô trống, kẹp trong lề màn hình.
 
 **Dàn chữ** (`layout-engine.js`):
 - Kịch bản được tách token (từ + dấu đoạn `PARA`) rồi **ngắt dòng một lần** theo độ rộng cột → `lines[]`, mỗi dòng nhớ `start` (token đầu).
 - **Vị trí đọc** là chỉ số dòng `k`. Tiến / lùi chỉ là `k ± stepLines`, nên tiến rồi lùi luôn khớp tuyệt đối.
-- Từ hàng đọc trở xuống: hiển thị `lines[k], lines[k+1], …` (các hàng này luôn nằm dưới ô trống nên luôn là khe đầy đủ). Dòng đang đọc và dòng sắp đọc không bao giờ đổi ngắt dòng.
-- Phía trên hàng đọc: dàn **ngược** các token đứng trước `lines[k].start` vào khe của từng hàng (từ hàng sát vạch đọc lên trên, khe phải trước rồi khe trái). Phần này là chữ đã đọc, có thể đổi ngắt dòng khi tiến / lùi, được làm mờ.
+- Hàng đọc là hàng đầy đủ nên luôn hiển thị đúng `lines[k]`.
+- Từ hàng đọc trở xuống: dàn **xuôi** từ `lines[k].start` vào khe của từng hàng (trái rồi phải). Hàng đầy đủ cho ra đúng các dòng `lines[k+1], …`; hàng cạnh ô trống (khi ô nằm dưới vạch đọc) chỉ chứa phần chữ vừa khe.
+- Phía trên hàng đọc: dàn **ngược** các token đứng trước `lines[k].start` (khe phải trước rồi khe trái). Phần này là chữ đã đọc, được làm mờ.
+- **Không được giả định** hàng nào luôn đầy đủ ngoài hàng đọc: ô trống có thể nằm bất kỳ đâu (lỗi 16/11/2026: các dòng dưới vạch đọc từng được vẽ full ngang và đè lên ô trống khi ô nằm thấp).
+- Hàng đầy đủ dùng cùng quy tắc ngắt dòng với `wrapLines` (hàm `fillSlot`), nên tiến / lùi không làm đổi dòng đang đọc.
 - Vị trí lưu vào localStorage là **chỉ số token** (`readingTokenIndex`), không phải `k`, vì `k` đổi khi cỡ chữ / màn hình đổi. Khôi phục bằng `findLineIndex` (dòng lớn nhất có `start ≤ token`).
 - Engine nhận hàm `measure(text)` từ ngoài, nên test bằng node với hàm đo giả.
 

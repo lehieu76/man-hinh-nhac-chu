@@ -17,6 +17,7 @@ export function defaultSettings() {
     columnWidthPct: 100,
     holeGap: 16,
     hole: { cx: 50, cy: 11, w: 18, h: 22 }, // % màn hình: tâm X, tâm Y, rộng, cao
+    readingPosition: 'above', // vạch đọc ngay trên ô trống (sát camera) hoặc 'below'
     stepLines: 1,
     smoothScroll: true,
   };
